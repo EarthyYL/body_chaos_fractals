@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from dataclasses import dataclass
-from config import G, V, M
+from systems.three_body.config import G, V, M
 
 defaultPrecision = np.float64
 PAIRS = ((0, 1), (0, 2), (1, 2))

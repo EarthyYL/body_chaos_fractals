@@ -1,5 +1,5 @@
 import numpy as np
-from state import State
+from systems.three_body.state import State
 
 # Both assume G = 1 and M = (1, 1, 1).
 
