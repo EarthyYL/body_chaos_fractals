@@ -1,0 +1,5 @@
+.vscode/
+*.npz
+*.png
+*.gif
+*.pyc
