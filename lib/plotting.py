@@ -35,3 +35,21 @@ def fate_and_time(xs, ys, fates, times, labels, colors, timed, t_max, path, titl
     fig.suptitle(title)
     fig.savefig(path, dpi=200)
     plt.close(fig)
+
+
+def fate_map(xs, ys, fates, labels, colors, path, title, xlabel, ylabel, marks=(), dpi=300):
+    """One large fate panel, for looking at fine structure (about 3600 px wide at the default dpi)."""
+    hx, hy = xs[1] - xs[0], ys[1] - ys[0]
+    extent = (xs[0] - hx / 2, xs[-1] + hx / 2, ys[0] - hy / 2, ys[-1] + hy / 2)
+    fig, ax = plt.subplots(figsize=(12, 13), constrained_layout=True)
+    ax.imshow(fates, origin="lower", extent=extent, cmap=ListedColormap(colors),
+              vmin=-0.5, vmax=len(colors) - 0.5, interpolation="nearest")
+    if marks:
+        ax.plot(*zip(*marks), "o", ms=7, mfc="white", mec="black")
+    ax.legend(handles=[Patch(color=c, label=l) for c, l in zip(colors, labels)],
+              loc="upper center", bbox_to_anchor=(0.5, -0.06), ncol=3, frameon=False, fontsize=12)
+    ax.set_title(title, fontsize=14)
+    ax.set_xlabel(xlabel, fontsize=12)
+    ax.set_ylabel(ylabel, fontsize=12)
+    fig.savefig(path, dpi=dpi)
+    plt.close(fig)
