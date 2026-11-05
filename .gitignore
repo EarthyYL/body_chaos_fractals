@@ -1,7 +1,9 @@
 .vscode/
 *.npz
 *.png
+!docs/*.png
 *.gif
 *.pyc
+*.so
 # agent / scratch notes at the repo root (root-anchored so a future __init__.py is not ignored)
 /_*
