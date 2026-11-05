@@ -1,4 +1,5 @@
 import os
+import time
 from multiprocessing import Pool
 import numpy as np
 
@@ -19,7 +20,7 @@ def grid_sweep(fn, xs, ys, cache, fields):
 
     Returns {field: array} indexed [row, col] = point (xs[col], ys[row]).
     fields[0] is the int fate (-1 = not computed yet); the rest are floats.
-    Saves to `cache` every len(xs) pixels and skips finished ones, so an interrupted run resumes where it stopped.
+    Saves to `cache` every 30 s and skips finished ones, so an interrupted run resumes where it stopped.
     fn must be picklable: a module-level function, or a functools.partial of one.
     """
     shape = (len(ys), len(xs))
@@ -31,11 +32,13 @@ def grid_sweep(fn, xs, ys, cache, fields):
     todo = [(fn, r, c, x, y) for r, y in enumerate(ys) for c, x in enumerate(xs) if out[fields[0]][r, c] < 0]
     if todo:
         os.makedirs(os.path.dirname(cache) or ".", exist_ok=True)
+        last = time.monotonic()
         with Pool() as pool:
-            for n, (r, c, res) in enumerate(pool.imap_unordered(_run, todo, chunksize=4), 1):
+            for n, (r, c, res) in enumerate(pool.imap_unordered(_run, todo, chunksize=64), 1):
                 for k, v in zip(fields, res):
                     out[k][r, c] = v
-                if n % len(xs) == 0 or n == len(todo):
+                if time.monotonic() - last > 30 or n == len(todo):   # a full save takes ~0.1 s, so not every row
                     _save(cache, xs=xs, ys=ys, **out)
+                    last = time.monotonic()
                     print(f"{n}/{len(todo)} pixels saved", flush=True)
     return out

@@ -1,0 +1,3 @@
+# Strip notebook outputs on commit; the local copy keeps them. The "nbstrip" filter is defined in .git/config, which is
+# per-clone, so a clone without it commits notebooks unchanged.
+*.ipynb filter=nbstrip

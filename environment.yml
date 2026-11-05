@@ -1,0 +1,16 @@
+# conda env create -f environment.yml && conda activate body-chaos-fractals
+# Also needs, from the system: a C++17 compiler, make, and the Boost headers (Ubuntu: sudo apt install g++ make libboost-dev).
+# Tested with Python 3.15.2, numpy 2.5.4, scipy 1.18.1, matplotlib 3.11.2, pillow 13.0.0, pytest 9.2.0, pybind11 3.1.0, g++ 13.3, Boost 1.83.
+name: body-chaos-fractals
+channels:
+  - conda-forge
+dependencies:
+  - python=3.15
+  - numpy>=2.5
+  - scipy>=1.18
+  - matplotlib>=3.11
+  - pillow
+  - pytest
+  - pip
+  - pip:
+      - pybind11>=3.1

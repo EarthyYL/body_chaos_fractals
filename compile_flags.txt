@@ -1,0 +1,4 @@
+-std=c++17
+-Wall
+-I/home/yluo/miniconda3/envs/scienv/include/python3.15
+-I/home/yluo/miniconda3/envs/scienv/lib/python3.15/site-packages/pybind11/include
