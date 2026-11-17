@@ -91,8 +91,7 @@ std::tuple<int, double, double> fate(double x, double y, double vx, double vy, d
     return {f, t, std::abs(jacobi(s) - c0)};
 }
 
-// The module name must match the file name you build (_fast.cpython-315-...so).
-// PYBIND11_MODULE runs once, when Python imports _fast; m is the module object, and each m.def adds one function to it.
+// pybind export for fate()
 PYBIND11_MODULE(_fast, m) {
     m.def("fate",      // _fast.fate(...)
           &fate,       // pybind11 converts float <-> double and std::tuple -> tuple

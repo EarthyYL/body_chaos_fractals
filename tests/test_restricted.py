@@ -1,5 +1,7 @@
 """The C++ integrator (fast.cpp) against the scipy reference. Run from the repo root: python -m pytest"""
 import numpy as np
+import pytest
+pytest.importorskip("systems.restricted._fast", reason="C++ integrator not built (run `make`)")
 from systems.restricted.fate import pixel_fixed_c, fate_fast
 from systems.restricted.reference import fate_scipy
 

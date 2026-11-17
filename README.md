@@ -38,6 +38,8 @@ make                                        # builds the C++ integrator; rerun a
 python -m pytest                            # tests: the C++ integrator against the scipy reference
 ```
 
+Without a C++ compiler (on Windows, for example), skip `apt` and `make`, and add `--scipy` to the commands below. It will use the scipy reference integrator, which is (near) identical, but about 200 times slower.
+
 ## Running
 
 Run everything from the repository root:
@@ -47,13 +49,11 @@ python -m runs.restricted_basins fixed_c          # C = 3.2 map at 601 × 601 (r
 python -m runs.restricted_basins fixed_c 5001     # same map at 5001 × 5001: (runtime: ~minutes)
 python -m runs.restricted_basins rest             # launches at rest in the rotating frame (each with its own C)
 python -m runs.restricted_basins fixed_c_inset    # the 601 map with its centre recomputed 3 times finer
-python -m runs.fig8_perturb                       # full three-body problem (scipy; slow)
 ```
 
 Results go to `data/` as `.npz` caches plus PNG figures. Cache names encode every parameter, and re-running a
-command resumes an interrupted run. To use scipy instead of the C++ integrator, set
-`INTEGRATE, TAG = fate_scipy, ""` in `runs/restricted_basins.py`, importing `fate_scipy` from
-`systems/restricted/reference.py`.
+command resumes an interrupted run. C++ caches carry an `_f78` tag in their names and `--scipy` caches don't, so the two
+integrators never mix in one map.
 
 ## Layout
 
@@ -61,12 +61,9 @@ command resumes an interrupted run. To use scipy instead of the C++ integrator, 
 |---|---|
 | `lib/` | system-independent tools: `sweep.py` (parallel, resumable grid sweeps over any `fn(x, y)`), `plotting.py` |
 | `systems/restricted/` | restricted problem: `model.py` (constants, effective potential, launch rule), `fate.py` (fate of each pixel; calls the C++ integrator), `fast.cpp` (C++ equations of motion, events and integrator), `reference.py` (the same in Python with scipy, for testing) |
-| `systems/three_body/` | full planar three-body problem with softened gravity |
 | `runs/` | scripts that produce the maps |
-| `notebooks/` | figure-eight orbit plot and animation |
 | `tests/` | pytest tests; run `python -m pytest` from the repository root |
-| `Makefile` | builds `systems/restricted/_fast*.so` from `fast.cpp` |
-| `compile_flags.txt` | include paths for clangd, specific to one machine; regenerate with `printf '%s\n' -std=c++17 -Wall $(python -m pybind11 --includes) > compile_flags.txt` |
+| `Makefile` | builds `systems/restricted/_fast*.so` from `fast.cpp`, and `compile_flags.txt` |
 
 ## Accuracy
 
@@ -81,7 +78,6 @@ command resumes an interrupted run. To use scipy instead of the C++ integrator, 
 - **Symmetry.** With μ = 0.5, rotating a launch by 180° gives the same fate with the primaries swapped, so only half of
   each grid is integrated and the rest is mirrored.
 
-## Full three-body problem
+## Why the restricted problem
 
-`runs/fig8_perturb.py` maps the fate of the figure-eight orbit (Moore 1993; Chenciner and Montgomery 2000) when one body's
-starting position is shifted. It uses softened gravity (softening length 10⁻³) and scipy. This problem lies in a 12D parameter space and is thus incredibly chaotic on a 2D slice (basically just looks like noise), so we opted to tackle the more constrained problem outlined above instead.
+We started with the full three-body problem, using the figure-eight orbit with one body's start shifted. However, that problem lives in a 12D phase space, and, when cutting a 2D slice through that space, there is little structure, mostly just noise and random blobs. Constricting the problem (to a 3D phase space) reveals interesting symmetries and contiguous phase volumes that are still readable to the human eye. For reference, the full three-body code is in the git history up to commit `fbdf65c`.
