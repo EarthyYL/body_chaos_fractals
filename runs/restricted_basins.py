@@ -5,6 +5,8 @@ Run from the repo root:
     python -m runs.restricted_basins rest            # every launch starts at rest in the rotating frame (its own C)
     python -m runs.restricted_basins fixed_c_inset   # fixed_c map with the detailed centre re-run K times finer
 An optional second argument sets the grid size N (odd; default 601 for fixed_c, 201 for rest).
+Add --scipy to use the scipy reference integrator instead of the C++ one: no compiler needed, about 200x slower,
+and its caches are named without the _f78 tag.
 Resumes from its cache in data/restricted/ if one exists for these parameters.
 
 Only the bottom half of each grid (plus the y = 0 row) is integrated: with equal primaries, rotating a launch by
@@ -17,6 +19,7 @@ from lib.sweep import grid_sweep
 from lib.plotting import fate_and_time, fate_map
 from systems.restricted.model import MU, R_COLL, R_ESC
 from systems.restricted.fate import FORBIDDEN, pixel_fixed_c, pixel_rest, fate_fast
+from systems.restricted.reference import fate_scipy
 
 C = 3.2          # fixed_c only; below 3.4568 (L2/L3) the exits to infinity are open
 T_MAX = 100.0
@@ -25,12 +28,10 @@ K = 3            # fixed_c_inset: inset pixels are K times finer than the fixed_
 INSET = (1.1, 1.15)   # fixed_c_inset: |x|, |y| bounds (at fixed_c pixel centres); holds all bound/crash detail at C = 3.2
 FATES = [f"bound at t={T_MAX:g}", "escapes", "crashes into primary 1", "crashes into primary 2", "forbidden at this C"]
 COLORS = ["#d9d8d3", "#2a78d6", "#eb6834", "#1baf7a", "#383835"]
-INTEGRATE, TAG = fate_fast, "_f78"   # C++ (Odeint fehlberg78). For the old untagged caches, use fate_scipy
-                                     # from systems.restricted.reference with TAG = ""
 SWAP = np.array([0, 1, 3, 2, 4])   # fate under the 180-degree rotation: crash into primary 1 <-> primary 2
 MODES = {   # mode: (pixel function, grid size N (odd), cache prefix, number of legend entries, title text)
-    "fixed_c": (partial(pixel_fixed_c, C=C, t_max=T_MAX, integrate=INTEGRATE), 601, f"basins_C{C:g}", 5, f"C = {C:g}"),
-    "rest": (partial(pixel_rest, t_max=T_MAX, integrate=INTEGRATE), 201, "basins_rest", 4, "released at rest"),
+    "fixed_c": (partial(pixel_fixed_c, C=C, t_max=T_MAX), 601, f"basins_C{C:g}", 5, f"C = {C:g}"),
+    "rest": (partial(pixel_rest, t_max=T_MAX), 201, "basins_rest", 4, "released at rest"),
 }
 
 
@@ -68,12 +69,16 @@ def refine(fn, xs, coarse, k, bounds, cache):
 
 
 if __name__ == "__main__":
-    mode = sys.argv[1] if len(sys.argv) > 1 else "fixed_c"
+    args = [a for a in sys.argv[1:] if a != "--scipy"]
+    # C++ (Odeint fehlberg78) by default; the tag keeps the two integrators' caches apart (never mix them in one map)
+    integrate, tag = (fate_scipy, "") if "--scipy" in sys.argv else (fate_fast, "_f78")
+    mode = args[0] if args else "fixed_c"
     if mode not in (*MODES, "fixed_c_inset"):
         sys.exit(f"unknown mode {mode!r}: use {', '.join(MODES)} or fixed_c_inset")
     fn, N, prefix, n_fates, desc = MODES["fixed_c" if mode == "fixed_c_inset" else mode]
-    N = int(sys.argv[2]) if len(sys.argv) > 2 else N   # optional grid size (odd), e.g. fixed_c 5001
-    cache = f"data/restricted/{prefix}_mu{MU:g}_N{N}_span{SPAN:g}_T{T_MAX:g}_coll{R_COLL:g}_esc{R_ESC:g}{TAG}_half.npz"
+    fn = partial(fn, integrate=integrate)
+    N = int(args[1]) if len(args) > 1 else N   # optional grid size (odd), e.g. fixed_c 5001
+    cache = f"data/restricted/{prefix}_mu{MU:g}_N{N}_span{SPAN:g}_T{T_MAX:g}_coll{R_COLL:g}_esc{R_ESC:g}{tag}_half.npz"
 
     xs = np.linspace(-SPAN, SPAN, N)
     fates, times, drifts = symmetric_sweep(fn, xs, xs, cache)   # for the inset mode this just loads the coarse map

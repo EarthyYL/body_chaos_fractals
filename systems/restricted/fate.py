@@ -6,7 +6,10 @@ reference.fate_scipy (the scipy reference). Both take a state [x, y, vx, vy] and
 """
 import math
 import numpy as np
-from systems.restricted import _fast   # compiled from fast.cpp: run `make` after editing it
+try:
+    import systems.restricted._fast as _fast   # compiled from fast.cpp: run `make` after editing it
+except ModuleNotFoundError:   # not built (e.g. no compiler); a broken build still raises ImportError
+    _fast = None
 from systems.restricted.model import MU, R_COLL, launch
 
 FORBIDDEN = 4   # fate index for launch points that can't exist at the chosen C
@@ -14,6 +17,8 @@ FORBIDDEN = 4   # fate index for launch points that can't exist at the chosen C
 
 def fate_fast(y0, t_max):
     """Integrate one launch in C++ (fast.cpp: Boost.Odeint fehlberg78, rtol 1e-10, atol 1e-12)."""
+    if _fast is None:
+        raise ImportError("C++ integrator not built: run `make`, or pass --scipy to use the scipy reference")
     return _fast.fate(*y0, t_max)
 
 
