@@ -19,11 +19,10 @@ def omega(x: float, y: float) -> float:
     return (x * x + y * y) / 2 + (1 - MU) / math.hypot(x + MU, y) + MU / math.hypot(x - 1 + MU, y)
 
 
-def launch(x: float, y: float, C: float) -> np.ndarray | None:
-    """State [x, y, vx, vy] of a particle at (x, y) with Jacobi constant C, moving perpendicular to its position vector
-    (counter-clockwise). None if (x, y) is forbidden at this C (it would need negative kinetic energy)."""
+def launch(x: float, y: float, C: float, alpha: float = math.pi / 2) -> np.ndarray | None:
+    """State [x, y, vx, vy] heading at angle alpha from the position vector; None if forbidden at this C."""
     v2 = 2 * omega(x, y) - C
     if v2 < 0:
         return None
-    v, th = math.sqrt(v2), math.atan2(y, x)
-    return np.array([x, y, -v * math.sin(th), v * math.cos(th)])
+    v, psi = math.sqrt(v2), math.atan2(y, x) + alpha
+    return np.array([x, y, v * math.cos(psi), v * math.sin(psi)])

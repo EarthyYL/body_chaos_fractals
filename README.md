@@ -18,7 +18,7 @@ $$\ddot x = 2\dot y + x - \frac{(1-\mu)(x+\mu)}{r_1^3} - \frac{\mu\,(x-1+\mu)}{r
 
 The Jacobi constant $C = 2\Omega - v^2$, with $\Omega = \tfrac12(x^2+y^2) + \tfrac{1-\mu}{r_1} + \tfrac{\mu}{r_2}$, is
 conserved. Fixing C and launching perpendicular to the position vector (counter-clockwise) reduces the 4D phase space to
-a 2D map of launch positions. Points where $2\Omega < C$ are forbidden. Below C ≈ 3.4568 the necks at the L2 and L3
+a 2D map of launch positions (the angle sweep below repeats it for every launch angle α from the position vector). Points where $2\Omega < C$ are forbidden. Below C ≈ 3.4568 the necks at the L2 and L3
 points open, so the particle can escape.
 
 | Fate | Meaning |
@@ -49,9 +49,12 @@ python -m runs.restricted_basins fixed_c          # C = 3.2 map at 601 × 601 (r
 python -m runs.restricted_basins fixed_c 5001     # same map at 5001 × 5001: (runtime: ~minutes)
 python -m runs.restricted_basins rest             # launches at rest in the rotating frame (each with its own C)
 python -m runs.restricted_basins fixed_c_inset    # the 601 map with its centre recomputed 3 times finer
+python -m runs.make_angle_sweep_video             # looping GIF: the C = 3.2 map as the launch angle turns through 360° (401 × 401, every 5°; ~6 min)
+python -m runs.make_angle_sweep_video 601 2.5     # same at 601 × 601, every 2.5° (~25 min)
+python -m runs.compare_integrator_accuracy        # accuracy vs cost of integrators, tolerances and float types (C = 3.2, 401 × 401; ~13 min)
 ```
 
-Results go to `data/` as `.npz` caches plus PNG figures. Cache names encode every parameter, and re-running a
+Results go to `data/` as `.npz` caches plus PNG figures (and GIFs for the angle sweep). Cache names encode every parameter, and re-running a
 command resumes an interrupted run. C++ caches carry an `_f78` tag in their names and `--scipy` caches don't, so the two
 integrators never mix in one map.
 
