@@ -15,37 +15,20 @@ Only the bottom half of each grid (plus the y = 0 row) is integrated: with equal
 import sys
 from functools import partial
 import numpy as np
-from lib.sweep import grid_sweep
 from lib.plotting import fate_and_time, fate_map
 from systems.restricted.model import MU, R_COLL, R_ESC
-from systems.restricted.fate import FORBIDDEN, pixel_fixed_c, pixel_rest, fate_fast
+from systems.restricted.fate import (COLORS, FATES, FORBIDDEN, T_MAX, fate_fast, pixel_fixed_c, pixel_rest,
+                                     symmetric_sweep)
 from systems.restricted.reference import fate_scipy
 
 C = 3.2          # fixed_c only; below 3.4568 (L2/L3) the exits to infinity are open
-T_MAX = 100.0
 SPAN = 1.5       # launch positions cover [-SPAN, SPAN] in x and y
 K = 3            # fixed_c_inset: inset pixels are K times finer than the fixed_c grid (odd, so y = 0 stays a grid row)
 INSET = (1.1, 1.15)   # fixed_c_inset: |x|, |y| bounds (at fixed_c pixel centres); holds all bound/crash detail at C = 3.2
-FATES = [f"bound at t={T_MAX:g}", "escapes", "crashes into primary 1", "crashes into primary 2", "forbidden at this C"]
-COLORS = ["#d9d8d3", "#2a78d6", "#eb6834", "#1baf7a", "#383835"]
-SWAP = np.array([0, 1, 3, 2, 4])   # fate under the 180-degree rotation: crash into primary 1 <-> primary 2
 MODES = {   # mode: (pixel function, grid size N (odd), cache prefix, number of legend entries, title text)
     "fixed_c": (partial(pixel_fixed_c, C=C, t_max=T_MAX), 601, f"basins_C{C:g}", 5, f"C = {C:g}"),
     "rest": (partial(pixel_rest, t_max=T_MAX), 201, "basins_rest", 4, "released at rest"),
 }
-
-
-def mirror(half, n, swap=None):
-    """Full n-row grid from rows 0..n//2 via the 180-degree symmetry: row r, col c of the top is row n-1-r, col n-1-c."""
-    top = half[: n // 2][::-1, ::-1]
-    return np.vstack([half, top if swap is None else swap[top]])
-
-
-def symmetric_sweep(fn, xs, ys, cache):
-    """Sweep the bottom half (plus the y = 0 row) of a grid symmetric about the origin; return the mirrored full maps."""
-    assert MU == 0.5 and len(ys) % 2 == 1, "the half-grid symmetry needs equal primaries and an odd row count (y = 0 row)"
-    half = grid_sweep(fn, xs, ys[: len(ys) // 2 + 1], cache, ("fates", "times", "drifts"))
-    return mirror(half["fates"], len(ys), SWAP), mirror(half["times"], len(ys)), mirror(half["drifts"], len(ys))
 
 
 def refine(fn, xs, coarse, k, bounds, cache):
